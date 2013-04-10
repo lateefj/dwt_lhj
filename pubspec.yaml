@@ -1,0 +1,5 @@
+name: dwt_lhj
+description: Some missing widgets and utilities I use from DWT
+dependencies:
+  browser: any
+  dart_web_toolkit: '>=0.3.0'
