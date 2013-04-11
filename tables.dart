@@ -72,12 +72,20 @@ class Row extends AbstracComplexPanel {
     return c;
   }
 }
+class DTColumnConfig {
+  String label;
+  String key;
+  int order;
+  DTColumnConfig(this.label, this.key, this.order) { }
+}
 
 class DataTable extends ui.ComplexPanel {
   TableElement _table = new TableElement();
   TableSectionElement _body;
   TableSectionElement _head;
   List<Row> rows = new List<Row>();
+  List<String> columnKeys = new List<String>();
+  Map<String, DTColumnConfig> columnConfigMap = new Map<String, DTColumnConfig>();
 
   DataTable() {
   _body = _table.createTBody();
@@ -88,8 +96,23 @@ class DataTable extends ui.ComplexPanel {
   /**
     * Hadd the table header
     */
-  Row addHead(List<String> columns) {
-    return _newRow(_head.addRow(), columns);
+  Row addHead(List<DTColumnConfig> columns) {
+    for(DTColumnConfig c in columns) {
+      columnKeys.insert(c.order, c.key);
+      columnConfigMap[c.key] = c;
+    }
+    List<String> labels = new List<String>();
+    for(String k in columnKeys) {
+      labels.add(columnConfigMap[k].label);
+    }
+    return _newRow(_head.addRow(), labels);
+  }
+  Row addHeadConfig(List<Map<String,String>> config) {
+    List<DTColumnConfig> columns = new List<DTColumnConfig>();
+    for(Map<String, String> c in config) {
+      columns.add(new DTColumnConfig(c['label'], c['key'], c['order']));
+    }
+    addHead(columns);
   }
 
   /**
@@ -110,4 +133,14 @@ class DataTable extends ui.ComplexPanel {
     return r;
   }
 
+  updateRecords(List<Map<String, String>> data) {
+    _body.children.clear();
+    for(Map<String, String> r in data) {
+      List<String> fields = new List<String>();
+      for(String k in columnKeys) {
+        fields.add(r[k]);
+      }
+      addRow(fields);
+    }
+  }
 }
