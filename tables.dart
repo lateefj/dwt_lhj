@@ -75,20 +75,39 @@ class Row extends AbstracComplexPanel {
 
 class DataTable extends ui.ComplexPanel {
   TableElement _table = new TableElement();
-  Element _body;
-  Element _header;
+  TableSectionElement _body;
+  TableSectionElement _head;
   List<Row> rows = new List<Row>();
 
   DataTable() {
   _body = _table.createTBody();
-  _header = _table.createTHead();
+  _head = _table.createTHead();
     setElement(_table);
   }
+
+  /**
+    * Hadd the table header
+    */
+  Row addHead(List<String> columns) {
+    return _newRow(_head.addRow(), columns);
+  }
+
+  /**
+    * Add a single row and to the table
+    */
   Row addRow(List<String> data) {
-    Row r = new Row(_table.addRow());
+    return _newRow(_body.addRow(), data);
+  }
+
+  /**
+    * Private wrapper for adding a list of data to a row
+    */
+  Row _newRow(TableRowElement tr, List<String> data) {
+    Row r = new Row(tr);
     for(String s in data) {
       r.addCell(s);
     }
     return r;
   }
+
 }
