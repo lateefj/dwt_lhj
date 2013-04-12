@@ -1,16 +1,16 @@
 /**
-  * Combination of insperation of GWT CellView stuff and http://datatables.net/. 
-  * GWT verbosity seems exessive and datatables.net api is pretty lacking for customization. 
-  * Hopefully this strikes a balance between quick to get started and easy to customize
-  * as the datatable gets more complex and featureful.
-  * Code theft from: https://github.com/akserg/dart_web_toolkit/blob/master/lib/src/ui/cell_panel.dart
-  *
-  */
+ * Combination of insperation of GWT CellView stuff and http://datatables.net/.
+ * GWT verbosity seems exessive and datatables.net api is pretty lacking for customization.
+ * Hopefully this strikes a balance between quick to get started and easy to customize
+ * as the datatable gets more complex and featureful.
+ * Code theft from: https://github.com/akserg/dart_web_toolkit/blob/master/lib/src/ui/cell_panel.dart
+ *
+ */
 part of dwt_lhj;
 /**
-  * Kinda redonkey but looks like the start of a very large class 
-  * hierarchy....
-  */
+ * Kinda redonkey but looks like the start of a very large class
+ * hierarchy....
+ */
 class AbstracComplexPanel extends ui.ComplexPanel implements ui.InsertPanelForIsWidget {
   /**
    * Adds a new child widget to the panel.
@@ -91,14 +91,14 @@ class DataTable extends ui.ComplexPanel {
   Map<String, DTColumnConfig> columnConfigMap = new Map<String, DTColumnConfig>();
 
   DataTable() {
-  _body = _table.createTBody();
-  _head = _table.createTHead();
+    _body = _table.createTBody();
+    _head = _table.createTHead();
     setElement(_table);
   }
 
   /**
-    * Hadd the table header
-    */
+   * Hadd the table header
+   */
   Row addHead(List<DTColumnConfig> columns) {
     for(DTColumnConfig c in columns) {
       columnKeys.insert(c.order, c.key);
@@ -119,15 +119,15 @@ class DataTable extends ui.ComplexPanel {
   }
 
   /**
-    * Add a single row and to the table
-    */
+   * Add a single row and to the table
+   */
   Row addRow(List<String> data) {
     return _newRow(_body.addRow(), data);
   }
 
   /**
-    * Private wrapper for adding a list of data to a row
-    */
+   * Private wrapper for adding a list of data to a row
+   */
   Row _newRow(TableRowElement tr, List<String> data) {
     Row r = new Row(tr);
     for(String s in data) {
@@ -150,16 +150,16 @@ class DataTable extends ui.ComplexPanel {
 
 
 /**
-  * Function signiture when a page is selected it will call this function
-  * with the page as the first param and page multiplied by the size as
-  * the second param.
-  */
+ * Function signiture when a page is selected it will call this function
+ * with the page as the first param and page multiplied by the size as
+ * the second param.
+ */
 typedef SelectedPage(int page, int start);
 
 /**
-  * Rough draft of a paginator. I am currently using bootstrap paginator for this.
-  * TODO: Don't display all pages just the previous and next couple from the relative page
-  */
+ * Rough draft of a paginator. I am currently using bootstrap paginator for this.
+ * TODO: Don't display all pages just the previous and next couple from the relative page
+ */
 class Paginator extends ui.Composite {
   static final String PAGE_ID_PREFIX = 'dwt_lhj-page-';
   ui.FlowPanel main = new ui.FlowPanel();
@@ -169,31 +169,36 @@ class Paginator extends ui.Composite {
   event.ClickHandlerAdapter selectPageHandler;
   SelectedPage selectedCallback;
   /**
-    * This disables the paginator
-    */
+   * This disables the paginator
+   */
   String disabledClass = 'disabledClass';
   /**
-    * Set on whatever is the currently active page.
-    */
+   * Set on whatever is the currently active page.
+   */
   String activeClass = 'activeClass';
   /**
-    * The main div class.
-    */
+   * The main div class.
+   */
   String divWrapperClass = 'pagination';
 
   //TODO: Need to add support for classes to the first and last page
   /**
-    * The first page
-    */
+   * The first page
+   */
   String firstPageIcon = '<<';
   /**
-    * The last page icon
-    */
+   * The last page icon
+   */
   String lastPageIcon = '<<';
 
   /**
-    * Default page size
+    * The total number of pages to display.
     */
+  int pagesLimit = 10;  // TODO: Implement that pages as being relative to the current page
+
+  /**
+   * Default page size
+   */
   int _pageSize = 10;
   set pageSize(int s) {
     _pageSize = s;
@@ -201,11 +206,11 @@ class Paginator extends ui.Composite {
   }
   int _totalRecords = null;
   /**
-    * Resetting the total number of records need to recalculate the
-    * number of pages. Then if the current page the reset limit then
-    * need to place it at the last page. Best compromize compared to
-    * just resetting to the first page?
-    */
+   * Resetting the total number of records need to recalculate the
+   * number of pages. Then if the current page the reset limit then
+   * need to place it at the last page. Best compromize compared to
+   * just resetting to the first page?
+   */
   set totalRecords(int s) {
     if(_totalRecords == null || _totalRecords != s) {
       int page = 0;
@@ -248,8 +253,8 @@ class Paginator extends ui.Composite {
   }
 
   /**
-    * Set the page for with is being selected
-    */
+   * Set the page for with is being selected
+   */
   setPage(int p) {
     if(current != null) {
       current = new LiPanel.fromElement(current.getElement());
@@ -279,10 +284,10 @@ class Paginator extends ui.Composite {
   }
 
   /**
-    * Regenerate the list of pages based on change in result set or
-    * if page size has changed. Or could be called because maybe data
-    * changed on the backend.
-    */
+   * Regenerate the list of pages based on change in result set or
+   * if page size has changed. Or could be called because maybe data
+   * changed on the backend.
+   */
   updatePages() {
     int pages = (_totalRecords / _pageSize).ceil();
     pager.clear();
@@ -313,9 +318,9 @@ class Paginator extends ui.Composite {
     return p;
   }
   /**
-    * Called when a page is selected this parses the page number
-    * and calls back to whatever is set for the callback function
-    */
+   * Called when a page is selected this parses the page number
+   * and calls back to whatever is set for the callback function
+   */
   pageSelected(String key) {
     int p = _parsePageId(key);
     int start = p * _pageSize;
