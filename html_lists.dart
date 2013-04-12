@@ -43,6 +43,9 @@ class LiPanel extends AbstracListPanel {
   LiPanel() {
     setElement(new LIElement());
   }
+  LiPanel.fromElement(LIElement e) {
+    setElement(e);
+  }
 }
 
 class UlListPanel extends AbstracListPanel {
