@@ -171,11 +171,11 @@ class Paginator extends ui.Composite {
   /**
    * This disables the paginator
    */
-  String disabledClass = 'disabledClass';
+  String disabledClass = 'disabled';
   /**
    * Set on whatever is the currently active page.
    */
-  String activeClass = 'activeClass';
+  String activeClass = 'active';
   /**
    * The main div class.
    */
@@ -189,7 +189,7 @@ class Paginator extends ui.Composite {
   /**
    * The last page icon
    */
-  String lastPageIcon = '<<';
+  String lastPageIcon = '>>';
 
   /**
     * The total number of pages to display.
@@ -221,7 +221,7 @@ class Paginator extends ui.Composite {
       updatePages();
       if(current != null) {
         // First make sure the page is not after the current number pages that are available
-        if(page * _pageSize > s - _pageSize) {
+        if(page * _pageSize >= s - _pageSize) {
           // Get the last page if it is past it
           page = (_totalRecords / _pageSize).ceil() - 1;
         }
@@ -324,7 +324,6 @@ class Paginator extends ui.Composite {
   pageSelected(String key) {
     int p = _parsePageId(key);
     int start = p * _pageSize;
-    log.debug('Decided that the page is $p and start is $start');
     // Need to do call back passing para
     if(selectedCallback != null) {
       selectedCallback(p, start);
