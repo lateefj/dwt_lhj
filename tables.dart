@@ -1,119 +1,142 @@
 /**
  * Combination of insperation of GWT CellView stuff and http://datatables.net/.
- * GWT verbosity seems exessive and datatables.net api is pretty lacking for customization.
+ * GWT verbosity seems exessive and datatables.net api is pretty combersome.
  * Hopefully this strikes a balance between quick to get started and easy to customize
  * as the datatable gets more complex and featureful.
  * Code theft from: https://github.com/akserg/dart_web_toolkit/blob/master/lib/src/ui/cell_panel.dart
  *
  */
 part of dwt_lhj;
+
 /**
- * Kinda redonkey but looks like the start of a very large class
- * hierarchy....
- */
-class AbstracComplexPanel extends ui.ComplexPanel implements ui.InsertPanelForIsWidget {
-  /**
-   * Adds a new child widget to the panel.
-   *
-   * @param w the widget to be added
-   */
-  void add(ui.Widget w) {
-    addWidget(w, getElement());
+  * Wrapper around TableCellElement
+  */
+class Cell extends AbstractComplexPanel {
+  Cell(Row _row) {
+    setElement(_row.addCell());
   }
 
-  void clear() {
-    try {
-      doLogicalClear();
-    } finally {
-      // Remove all existing child nodes.
-      for (Element element in getElement().children) {
-        element.remove();
-      }
-    }
-  }
-  void insertIsWidget(ui.IsWidget w, int beforeIndex) {
-    insertWidget(asWidgetOrNull(w), beforeIndex);
-  }
-
-  /**
-   * Inserts a widget before the specified index.
-   *
-   * @param w the widget to be inserted
-   * @param beforeIndex the index before which it will be inserted
-   * @throws IndexOutOfBoundsException if <code>beforeIndex</code>code> is out of
-   *           range
-   */
-  void insertWidget(ui.Widget w, int beforeIndex) {
-    insert(w, getElement(), beforeIndex, true);
+  Cell.fromElement(TableCellElement e) {
+    setElement(e);
   }
 }
 
-class Cell extends AbstracComplexPanel {
-  Row _row; // Row this cell is associated with
-  TableCellElement _cell;
-  Cell(Row this._row, TableCellElement this._cell) {
-    setElement(_cell);
-  }
-  set text(String text) {
-    _cell.text = text;
-  }
-}
-
-class Row extends AbstracComplexPanel {
+/**
+  * Wrapper around TableRowElement
+  */
+class Row extends AbstractComplexPanel {
   List<Cell> cells = new List<Cell>();
   TableRowElement _row;
   Row(TableRowElement this._row) {
+    setElement(this._row);
+  }
+
+  Row.fromElement(TableRowElement this._row) {
     setElement(_row);
   }
-  Cell addCell(String text) {
-    Cell c = new Cell(this, _row.addCell());
-    if(text == null) {
-      text = '';
-    }
-    c.text = text;
+
+  Cell addCell(ui.Widget w) {
+    Cell c = new Cell.fromElement(_row.addCell());
     cells.add(c);
+    c.add(w);
     return c;
   }
 }
+
+/**
+  * Sort ordering
+  */
+const int SORT_ASCENDING = 0;
+const int SORT_DESCENDING = 1;
+/**
+  * Will be called with the column key for which colum
+  * needs to be sorted.
+  */
+typedef void SortColumn(String key, int order);
+
+/**
+  * This is pretty shaky right now need to think this though better
+  * But it holds the column configuration for now. Will need to have
+  * formatters and formatter callbacks eventually.
+  */
 class DTColumnConfig {
   String label;
   String key;
   int order;
-  DTColumnConfig(this.label, this.key, this.order) { }
+  bool sortable;
+
+  DTColumnConfig(this.label, this.key, this.order, {bool this.sortable: false}) { }
 }
 
 class DataTable extends ui.ComplexPanel {
   TableElement _table = new TableElement();
   TableSectionElement _body;
   TableSectionElement _head;
+  SortColumn sortCallback;
+  String upArrowClass;
+  String downArrowClass;
   List<Row> rows = new List<Row>();
   List<String> columnKeys = new List<String>();
   Map<String, DTColumnConfig> columnConfigMap = new Map<String, DTColumnConfig>();
 
-  DataTable() {
+  DataTable({SortColumn sortCallback: null, String this.upArrowClass: 'icon-arrow-up', String this.downArrowClass: 'icon-arrow-down'}) {
+    this.sortCallback = sortCallback;
     _body = _table.createTBody();
     _head = _table.createTHead();
     setElement(_table);
   }
 
   /**
-   * Hadd the table header
+   * Add the table header
    */
   Row addHead(List<DTColumnConfig> columns) {
     for(DTColumnConfig c in columns) {
       columnKeys.insert(c.order, c.key);
       columnConfigMap[c.key] = c;
     }
-    List<String> labels = new List<String>();
+    List<ui.Widgets> labels = new List<ui.Widgets>();
     for(String k in columnKeys) {
-      labels.add(columnConfigMap[k].label);
+      DTColumnConfig cConfig = columnConfigMap[k];
+      ui.Label label = new ui.Label(cConfig.label);
+      // Setup sorting if available
+      if(cConfig.sortable) {
+        ui.FlowPanel p = new ui.FlowPanel();
+        // Keep the container from wrapping in the table column header
+        label.getElement().style.float = 'left';
+        p.add(label);
+        ui.Anchor upArrow = new ui.Anchor(true);
+        upArrow.getElement().classes.add(upArrowClass);
+        p.add(upArrow);
+        ui.Anchor downArrow = new ui.Anchor(true);
+        downArrow.getElement().classes.add(downArrowClass);
+        p.add(downArrow);
+        labels.add(p);
+        // If we have a sort callback then call it
+        if(sortCallback != null) {
+          upArrow.addClickHandler(new event.ClickHandlerAdapter((event.ClickEvent e) {
+                window.console.log('Click on up arrow!!!');
+                sortCallback(k, SORT_ASCENDING);
+                }));
+          downArrow.addClickHandler(new event.ClickHandlerAdapter((event.ClickEvent e) {
+                window.console.log('Click on down arrow!!!');
+                sortCallback(k, SORT_DESCENDING);
+                }));
+        }
+      } else {
+        labels.add(label);
+      }
     }
     return _newRow(_head.addRow(), labels);
   }
+
   Row addHeadConfig(List<Map<String,String>> config) {
     List<DTColumnConfig> columns = new List<DTColumnConfig>();
     for(Map<String, String> c in config) {
-      columns.add(new DTColumnConfig(c['label'], c['key'], c['order']));
+      bool sortable = false;
+      if(c.containsKey('sortable')) {
+        sortable = c['sortable'];
+      }
+      columns.add(new DTColumnConfig(c['label'], c['key'], c['order'], sortable:sortable));
     }
     addHead(columns);
   }
@@ -121,27 +144,46 @@ class DataTable extends ui.ComplexPanel {
   /**
    * Add a single row and to the table
    */
-  Row addRow(List<String> data) {
+  Row addRow(List<ui.Widgets> data) {
     return _newRow(_body.addRow(), data);
   }
 
   /**
    * Private wrapper for adding a list of data to a row
    */
-  Row _newRow(TableRowElement tr, List<String> data) {
+  Row _newRow(TableRowElement tr, List<ui.Widgets> data) {
     Row r = new Row(tr);
-    for(String s in data) {
+    for(Widget s in data) {
       r.addCell(s);
     }
     return r;
   }
+  /**
+    * Pass in a set of widgets. Helpful if already have a set of 
+    * butons or handlers.
+    */
+  updateTable(List<Map<String, ui.Widget>> data) {
+    _body.children.clear();
+    for(Map<String, ui.Widget> r in data) {
+      List<String> fields = new List<String>();
+      for(String k in columnKeys) {
+        // Hack hack ui.Html should support ui.widget!!
+        fields.add(r[k]);
+      }
+      addRow(fields);
+    }
+  }
 
+  /**
+    * Update the data in the table
+    */
   updateRecords(List<Map<String, String>> data) {
     _body.children.clear();
     for(Map<String, String> r in data) {
       List<String> fields = new List<String>();
       for(String k in columnKeys) {
-        fields.add(r[k]);
+        // Hack hack ui.Html should support ui.widget!!
+        fields.add(new ui.Html(r[k]));
       }
       addRow(fields);
     }
