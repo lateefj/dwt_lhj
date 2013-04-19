@@ -14,6 +14,7 @@ part of dwt_lhj;
 class Cell extends AbstractComplexPanel {
   Cell(Row _row) {
     setElement(_row.addCell());
+    _row.add(this);
   }
 
   Cell.fromElement(TableCellElement e) {
@@ -25,7 +26,6 @@ class Cell extends AbstractComplexPanel {
   * Wrapper around TableRowElement
   */
 class Row extends AbstractComplexPanel {
-  List<Cell> cells = new List<Cell>();
   TableRowElement _row;
   Row(TableRowElement this._row) {
     setElement(this._row);
@@ -37,9 +37,24 @@ class Row extends AbstractComplexPanel {
 
   Cell addCell(ui.Widget w) {
     Cell c = new Cell.fromElement(_row.addCell());
-    cells.add(c);
+    add(c);
     c.add(w);
     return c;
+  }
+}
+
+/**
+  * Wrraper around TableSectionElement
+  */
+class Table extends AbstractComplexPanel {
+  TableSectionElement _table;
+  Table.fromElement(TableSectionElement this._table) {
+    setElement(this._table);
+  }
+  Row addRow() {
+    Row r = new Row.fromElement(_table.addRow());
+    add(r);
+    return r;
   }
 }
 
@@ -55,6 +70,11 @@ const int SORT_DESCENDING = 1;
 typedef void SortColumn(String key, int order);
 
 /**
+  * Allow for custom formatting of a cell so that a column can call it when rendering the data
+  */
+typedef ui.Widget CustomFormatter(String field, dynamic row);
+
+/**
   * This is pretty shaky right now need to think this though better
   * But it holds the column configuration for now. Will need to have
   * formatters and formatter callbacks eventually.
@@ -64,14 +84,16 @@ class DTColumnConfig {
   String key;
   int order;
   bool sortable;
+  CustomFormatter formatter;
 
-  DTColumnConfig(this.label, this.key, this.order, {bool this.sortable: false}) { }
+  DTColumnConfig(this.label, this.key, this.order, {bool this.sortable: false, CustomFormatter this.formatter: null}) { }
 }
 
-class DataTable extends ui.ComplexPanel {
+
+class DataTable extends AbstractComplexPanel {
   TableElement _table = new TableElement();
-  TableSectionElement _body;
-  TableSectionElement _head;
+  Table _body;
+  Table _head;
   SortColumn sortCallback;
   String upArrowClass;
   String downArrowClass;
@@ -81,9 +103,11 @@ class DataTable extends ui.ComplexPanel {
 
   DataTable({SortColumn sortCallback: null, String this.upArrowClass: 'icon-arrow-up', String this.downArrowClass: 'icon-arrow-down'}) {
     this.sortCallback = sortCallback;
-    _body = _table.createTBody();
-    _head = _table.createTHead();
+    _body = new Table.fromElement(_table.createTBody());
+    _head = new Table.fromElement(_table.createTHead());
     setElement(_table);
+    add(_body);
+    add(_head);
   }
 
   /**
@@ -136,7 +160,11 @@ class DataTable extends ui.ComplexPanel {
       if(c.containsKey('sortable')) {
         sortable = c['sortable'];
       }
-      columns.add(new DTColumnConfig(c['label'], c['key'], c['order'], sortable:sortable));
+      CustomFormatter f = null;
+      if(c.containsKey('formatter')) {
+        f = c['formatter'];
+      }
+      columns.add(new DTColumnConfig(c['label'], c['key'], c['order'], sortable:sortable, formatter:f));
     }
     addHead(columns);
   }
@@ -151,24 +179,27 @@ class DataTable extends ui.ComplexPanel {
   /**
    * Private wrapper for adding a list of data to a row
    */
-  Row _newRow(TableRowElement tr, List<ui.Widgets> data) {
-    Row r = new Row(tr);
+  Row _newRow(Row tr, List<ui.Widgets> data) {
     for(Widget s in data) {
-      r.addCell(s);
+      tr.addCell(s);
     }
-    return r;
+    return tr;
   }
   /**
     * Pass in a set of widgets. Helpful if already have a set of 
     * butons or handlers.
     */
   updateTable(List<Map<String, ui.Widget>> data) {
-    _body.children.clear();
+    _body.clear();
     for(Map<String, ui.Widget> r in data) {
       List<String> fields = new List<String>();
       for(String k in columnKeys) {
-        // Hack hack ui.Html should support ui.widget!!
-        fields.add(r[k]);
+        ui.Widget w = r[k];
+        DTColumnConfig c  = columnConfigMap[k];
+        if(c.formatter != null) {
+          w = c.formatter(r[k], r);
+        }
+        fields.add(w);
       }
       addRow(fields);
     }
@@ -178,12 +209,17 @@ class DataTable extends ui.ComplexPanel {
     * Update the data in the table
     */
   updateRecords(List<Map<String, String>> data) {
-    _body.children.clear();
+    _body.clear();
     for(Map<String, String> r in data) {
       List<String> fields = new List<String>();
       for(String k in columnKeys) {
+        ui.Widget w = new ui.Html(r[k]);
+        DTColumnConfig c  = columnConfigMap[k];
+        if(c.formatter != null) {
+          w = c.formatter(r[k], r);
+        }
         // Hack hack ui.Html should support ui.widget!!
-        fields.add(new ui.Html(r[k]));
+        fields.add(w);
       }
       addRow(fields);
     }
