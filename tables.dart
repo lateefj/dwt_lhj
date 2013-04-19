@@ -112,6 +112,8 @@ class DataTable extends AbstractComplexPanel {
 
   /**
    * Add the table header
+   * TODO: This code is kinda a mess waiting for more 
+   * options to shake out before it gets rewritten
    */
   Row addHead(List<DTColumnConfig> columns) {
     for(DTColumnConfig c in columns) {
@@ -125,7 +127,7 @@ class DataTable extends AbstractComplexPanel {
       // Setup sorting if available
       if(cConfig.sortable) {
         ui.FlowPanel p = new ui.FlowPanel();
-        // Keep the container from wrapping in the table column header
+        // Keep the container from wrapping in the table column header 
         label.getElement().style.float = 'left';
         p.add(label);
         ui.Anchor upArrow = new ui.Anchor(true);
@@ -138,11 +140,9 @@ class DataTable extends AbstractComplexPanel {
         // If we have a sort callback then call it
         if(sortCallback != null) {
           upArrow.addClickHandler(new event.ClickHandlerAdapter((event.ClickEvent e) {
-                window.console.log('Click on up arrow!!!');
                 sortCallback(k, SORT_ASCENDING);
                 }));
           downArrow.addClickHandler(new event.ClickHandlerAdapter((event.ClickEvent e) {
-                window.console.log('Click on down arrow!!!');
                 sortCallback(k, SORT_DESCENDING);
                 }));
         }
