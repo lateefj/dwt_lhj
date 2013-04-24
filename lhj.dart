@@ -7,4 +7,5 @@ import 'package:dart_web_toolkit/event.dart' as event;
 part 'abstract_panel.dart';
 part 'html_lists.dart';
 part 'tables.dart';
+part 'route.dart';
 

@@ -239,7 +239,7 @@ typedef SelectedPage(int page, int start);
  * TODO: Don't display all pages just the previous and next couple from the relative page
  */
 class Paginator extends ui.Composite {
-  static final String PAGE_ID_PREFIX = 'dwt_lhj-page-';
+  static final String PAGE_ID_PREFIX = 'dwt-lhj-page-';
   ui.FlowPanel main = new ui.FlowPanel();
   UlListPanel pager = new UlListPanel();
   LiPanel first = new LiPanel();
@@ -283,6 +283,19 @@ class Paginator extends ui.Composite {
     updatePages();
   }
   int _totalRecords = null;
+
+  /**
+    * This provides a way to set which page to start on numerically.
+    * The actual page number will get computed programatically. This way
+    * the client code can just keep track of the start and limit and not 
+    * worry about computing how that renders on the pagination.
+    */
+  int _start = null;
+  set start(int start) {
+    _start = start;
+  }
+
+
   /**
    * Resetting the total number of records need to recalculate the
    * number of pages. Then if the current page the reset limit then
@@ -298,6 +311,14 @@ class Paginator extends ui.Composite {
       _totalRecords = s;
       updatePages();
       if(current != null) {
+
+        // Provide override of which page to start on
+        if(_start != null) {
+          page = (_start / _pageSize).ceil();
+          // Rest to null since the pagination is taking over now
+          _start = null;
+        }
+
         // First make sure the page is not after the current number pages that are available
         if(page * _pageSize >= s - _pageSize) {
           // Get the last page if it is past it
@@ -360,6 +381,7 @@ class Paginator extends ui.Composite {
       last.getElement().classes.remove(activeClass);
     }
   }
+
 
   /**
    * Regenerate the list of pages based on change in result set or
