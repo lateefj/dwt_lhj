@@ -4,9 +4,11 @@
  */
 part of dwt_lhj;
 
+logging.Logger log = new logging.Logger('lhj_dwt.router');
 
 typedef PatternHandler(String path);
 class Router {
+  bool debug = false;
   Map<RegExp, PatternHandler> patterns = new Map<RegExp, PatternHandler>();
 
   addRegex(RegExp r, PatternHandler handler) {
@@ -16,7 +18,9 @@ class Router {
   listen() {
     ui.History.addValueChangeHandler(new event.ValueChangeHandlerAdapter<String>((event.ValueChangeEvent<String> e) {
           String path = e.value;
-          window.console.debug('Changed path to $path');
+          if(debug) {
+            log.finest('dwt_lhj.Router path change: $path');
+          }
           handle(path);
         }));
   }
@@ -24,6 +28,9 @@ class Router {
   handle(String path) {
     for(RegExp r in patterns.keys) {
       if(r.firstMatch(path) != null) {
+          if(debug) {
+            log.finer('dwt_lhj.Router found match for path: $path');
+          }
         patterns[r](path);
       }
     }

@@ -1,5 +1,9 @@
 name: dwt_lhj
 description: Some missing widgets and utilities I use from DWT
+version: 0.1
+author: "Lateef Jackson <lateef.jackson@gmail.com>"
+homepage: https://github.com/lateefj/dwt_lhj
 dependencies:
   browser: any
+  logging: any
   dart_web_toolkit: '>=0.3.0'
