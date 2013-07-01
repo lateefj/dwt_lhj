@@ -1,7 +1,7 @@
 name: dwt_lhj
-description: Some missing widgets and utilities I use from DWT
-version: 0.1
-author: "Lateef Jackson <lateef.jackson@gmail.com>"
+version: 0.0.1
+description: Some missing widgets and utilities I use from DWT, like client side routing, html lists and data table library
+author: Lateef Jackson <lateef.jackson@gmail.com>
 homepage: https://github.com/lateefj/dwt_lhj
 dependencies:
   browser: any

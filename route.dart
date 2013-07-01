@@ -4,7 +4,7 @@
  */
 part of dwt_lhj;
 
-logging.Logger log = new logging.Logger('lhj_dwt.router');
+logging.Logger routeLog = new logging.Logger('lhj_dwt.router');
 
 typedef PatternHandler(String path);
 class Router {
@@ -19,7 +19,7 @@ class Router {
     ui.History.addValueChangeHandler(new event.ValueChangeHandlerAdapter<String>((event.ValueChangeEvent<String> e) {
           String path = e.value;
           if(debug) {
-            log.finest('dwt_lhj.Router path change: $path');
+            routeLog.finest('dwt_lhj.Router path change: $path');
           }
           handle(path);
         }));
@@ -29,13 +29,13 @@ class Router {
     for(RegExp r in patterns.keys) {
       if(r.firstMatch(path) != null) {
           if(debug) {
-            log.finer('dwt_lhj.Router found match for path: $path');
+            routeLog.finer('dwt_lhj.Router found match for path: $path');
           }
         patterns[r](path);
+        return; // Only match a single pattern
       }
     }
   }
-
 }
 
 

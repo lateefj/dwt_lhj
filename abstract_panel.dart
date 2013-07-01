@@ -2,6 +2,8 @@
  * Kinda redonkey but looks like the start of a very large class
  * hierarchy....
  */
+part of dwt_lhj;
+
 class AbstractComplexPanel extends ui.ComplexPanel implements ui.InsertPanelForIsWidget {
   /**
    * Adds a new child widget to the panel.
