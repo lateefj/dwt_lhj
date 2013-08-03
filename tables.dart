@@ -336,19 +336,32 @@ class Paginator extends ui.Composite {
     selectPageHandler = new event.ClickHandlerAdapter((event.ClickEvent e) {
         pageSelected(e.getRelativeElement().id);
         });
+    intl.BidiFormatter bf = new intl.BidiFormatter.UNKNOWN();
     ui.Anchor fa = new ui.Anchor();
-    fa.html = firstPageIcon;
+    fa.html = bf.htmlEscape(firstPageIcon);
     fa.getElement().id = '${PAGE_ID_PREFIX}first';
     fa.addClickHandler(selectPageHandler);
     first.add(fa);
     ui.Anchor la = new ui.Anchor();
-    la.html = lastPageIcon;
+    la.html = bf.htmlEscape(lastPageIcon);
     la.getElement().id = '${PAGE_ID_PREFIX}last';
     last.add(la);
     la.addClickHandler(selectPageHandler);
     initWidget(main);
     main.getElement().classes.add(divWrapperClass);
     main.add(pager);
+  }
+
+  /**
+    * Simple helper to find the matching element
+    */
+  ui.Element _findCurrentPageElement(int p) {
+    for(ui.Element e in pager.getElement().children) {
+      if (_parsePageId(e.children[0].innerHtml) == p) {
+        return e;
+      }
+    }
+    return null;
   }
 
   /**
@@ -361,7 +374,9 @@ class Paginator extends ui.Composite {
       current.getElement().classes.remove(activeClass);
     }
     // Find the current element
-    current = new LiPanel.fromElement(pager.getElement().children[p+1]);
+    current = new LiPanel.fromElement(_findCurrentPageElement(p));
+    //current = new LiPanel.fromElement(pager.getElement().children[p+1]);
+
     // Set it to activeClass
     current.getElement().classes.add(activeClass);
     //current.getElement().classes.add(disabledClass);
@@ -380,6 +395,7 @@ class Paginator extends ui.Composite {
       last.getElement().classes.remove(disabledClass);
       last.getElement().classes.remove(activeClass);
     }
+    updatePages();
   }
 
 
@@ -392,7 +408,8 @@ class Paginator extends ui.Composite {
     int pages = (_totalRecords / _pageSize).ceil();
     pager.clear();
     pager.add(first);
-    for(int i=0; i<pages; i++) {
+    int s = pageNumber();
+    for(int i=s; i<s+pagesLimit; i++) {
       ui.Anchor a = new ui.Anchor();
       a.html = '${i+1}';
       a.getElement().id = '${PAGE_ID_PREFIX}${i}';
@@ -402,20 +419,31 @@ class Paginator extends ui.Composite {
       pager.add(l);
     }
     pager.add(last);
-    setPage(0);
+    //setPage(0);
   }
 
   int _parsePageId(String key) {
+    intl.BidiFormatter bf = new intl.BidiFormatter.UNKNOWN();
     key = key.replaceFirst(PAGE_ID_PREFIX, '');
     int p = 0;
-    if(key == 'first') {
+    if(key == 'first' || key == bf.htmlEscape(firstPageIcon)) {
       p = 0;
-    } else if (key == 'last') {
+    } else if (key == 'last' || key == bf.htmlEscape(lastPageIcon)) {
       p = pager.getElement().children.length - 3;
     } else {
       p = int.parse(key);
     }
     return p;
+  }
+
+  /**
+    * Simple wrapper to compute the current page numebr int
+    */
+  int pageNumber() {
+    if (_start == null || _pageSize == null) {
+      return 0;
+    }
+    return (_start / _pageSize).toInt();
   }
   /**
    * Called when a page is selected this parses the page number
