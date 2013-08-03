@@ -5,5 +5,6 @@ author: Lateef Jackson <lateef.jackson@gmail.com>
 homepage: https://github.com/lateefj/dwt_lhj
 dependencies:
   browser: any
+  intl: any
   logging: any
   dart_web_toolkit: '>=0.3.0'
